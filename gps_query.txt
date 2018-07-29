@@ -1,0 +1,10 @@
+select * from DATA_MASTER.LOCATION_MASTER where Latitude like ('%12.2028083%' and Longitude like '%79.0660050%')
+
+select * from DATA_MASTER.location_master_staging where SUBSTRING(latitude, 1, 7) = '13.1894767' and SUBSTRING(longitude, 1, 7) = '80.2308850'
+select * from DATA_MASTER.location_master_staging where SUBSTRING(latitude, 1, 7) = '13.1894' and SUBSTRING(longitude, 1, 7) = '80.2308'
+
+select * from location_master0718 where date_stamp between '2018-07-28 02:27:33' and '2018-07-28 04:27:33'
+and location_name = 'Thiruvannamalai - Harur Rd  Reddiarpalayam  Tamil Nadu 606708  India'
+order by location_name
+
+delete n1 FROM location_master0718 n1, location_master0718 n2 WHERE n1.id > n2.id AND n1.latitude = n2.latitude and  n1.longitude = n2.longitude
