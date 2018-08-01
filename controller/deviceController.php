@@ -31,12 +31,9 @@ class DeviceController
 		# Data parsing for individual log
 		if ($do == 'data'){
 			list($formatType,$protocolVersion,$IMEI) = explode(",",$data);
-			$dataPocketCount = count(explode(",",$data));
 			
 			# Data logger if valid IMEI number
-			if(strlen($IMEI) == Config::IMEI_LENGTH) {
-				$this->helper->dataLoggerFile($data, $logPrefix = $IMEI, 'success');
-			}
+			$this->helper->dataLoggerFile($data, $logPrefix = $IMEI, 'success');
 		}
 		if(!empty($data)){
 			# Insert Data into Temp
@@ -132,7 +129,7 @@ class DeviceController
 			if($gpsStatus != 0) {
 				# update device current status
 				$insertDeviceDataResult = $this->deviceService->insertDeviceData($dataContent, $locationName, $deviceEpochTime, $dateStamp);
-				
+
 				# Delete the temp data
 				$deleteTempDataResult = $this->deviceService->deleteTempData($dataContent);
 				

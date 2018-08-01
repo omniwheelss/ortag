@@ -13,7 +13,7 @@
 		const LOGS_PATH = "logs";
 		const DAILY_LOG = "dailylog";
 		const ERROR_LOG = "errorlog";
-		const NEWLINE = "\r\n";
+		const NEWLINE = "\n";
 		const NEWLINE_ERROR = "\r\n---------------------------------------";
 				
 	}

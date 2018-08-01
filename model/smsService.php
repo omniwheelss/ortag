@@ -106,16 +106,21 @@ class SMSService
 	{
 		# Variable declaration
 		$message = $dataStatus = null;
-		
-		#Formatting data
-		$deviceResponseFormatedData = str_replace('?reply=', '', $rawData);
-		$deviceResponseFormatedDataExplode = explode(",",$deviceResponseFormatedData);
-		$IMEI = $deviceResponseFormatedDataExplode[2];
 
+		#Formatting data
+		$deviceResponseFormatedDataExplode = explode(",",$rawData);
+		if (strpos($rawData,'FP01') !== false) {   
+			$IMEI = $deviceResponseFormatedDataExplode[2];
+		}
+		else{
+			$deviceResponseFormatedDataExplode = explode(",",$rawData);
+			$IMEI = $deviceResponseFormatedDataExplode[1];	
+		}		
+	
 		try {
 			$stmt = $this->conn->prepare("CALL spUpdResponseFromDevice(?,?)");
 			$stmt->bindParam(1,$IMEI, PDO::PARAM_STR);
-			$stmt->bindParam(2,$deviceResponseFormatedData, PDO::PARAM_STR);
+			$stmt->bindParam(2,$rawData, PDO::PARAM_STR);
 			$stmt->execute();
 			$message = "Device response updated";
 			$dataStatus = 'success';

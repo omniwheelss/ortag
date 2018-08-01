@@ -41,6 +41,7 @@ class HelperController
 	**/	
 	static function dataLogger($data, $path, $logPrefix, $extraData) {
 		
+		$logFileCount = 0;
 		// Setting null if  prefix empty
 		$logPrefix = (!empty($logPrefix)? $logPrefix."_":"");
 
@@ -54,11 +55,11 @@ class HelperController
 		if (($logFileReadCount%2) == 0)
 			$logFileCount = ($logFileReadCount/2)+1;
 
-		$finalData = "".$logFileCount." - ".@date("d-m-Y H:i:s")." ".$data."\n";
-		if(!fwrite($handle, "".$finalData."".CONFIG::NEWLINE."")) die("couldn't write to file. : Check the Folder permisson for (".$filePath.")");
+		$finalData = "".$logFileCount." - ".@date("d-m-Y H:i:s")." ".$data."";
+		if(!fwrite($handle, "".CONFIG::NEWLINE."".$finalData."".CONFIG::NEWLINE."")) die("couldn't write to file. : Check the Folder permisson for (".$filePath.")");
 	}
 	
-			
+		
 	/**
 		get ip address for the user
 	**/	
