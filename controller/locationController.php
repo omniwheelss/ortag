@@ -47,7 +47,7 @@ class LocationController
 				$longitude = $locationDataVal['longitude'];
 				$updateID = $locationDataVal['id'];
 
-				echo $locationUpdateFor = "Updating location for : ". $latitude."|".$longitude."|".$updateID."\n";
+				echo $locationUpdateFor = "Updating location for : ". $latitude."|".$longitude."\n";
 				
 				# Fetch Location Name
 				$fetchLocationDataResult = $this->locationService->fetchLocationByLatLong($latitude, $longitude);
@@ -59,11 +59,13 @@ class LocationController
 				else{
 					$validateLatLongResult = $this->helper->validateLatLong($latitude,$longitude);
 					if($validateLatLongResult){
+
 						# update location
-						$fetchLocationDataVendorResult = $this->locationService->fetchLocationFromVendorByLatLong($latitude, $longitude, 'cron');
+						$fetchLocationDataVendorResult = $this->locationService->fetchLocationFromVendorByLatLong(Config::PRIMARY_GEO_ENGINE ,$latitude, $longitude, 'api');
 						$locationName = $fetchLocationDataVendorResult[0];
 						$locationKey = $fetchLocationDataVendorResult[1];
-						echo "Location Google --".$locationName."\n\n";
+						$geoEngine = $fetchLocationDataVendorResult[2];
+						echo "Location ".$geoEngine." --".$locationName."\n\n";
 						# Data logger
 						$this->helper->dataLoggerFile($locationKey, $logPrefix = 'googleGeo', 'success');						
 					}	
@@ -78,6 +80,52 @@ class LocationController
 		}
 		return $message;
 	}	
+	
+	/**
+		update the location if not available
+	**/
+	public function testLocation() {
+			
+		$this->do = isset($_REQUEST['do'])?$_REQUEST['do']:NULL;	
+		if($this->do != 'yes'){
+			exit;
+		}
+			
+		$locationDataResult = $fetchLocationDataResult = $fetchLocationDataVendorResult = $message = $locationKey = $locationUpdateFor = $locationUpdateStartMsg = null;
+		$totalRecordsTobeProcessed = 0;
+		# Fetch records
+		$locationDataResult = $this->locationService->selectLocationIfNotAvailable();
+
+		if($locationDataResult[0] == 'success'){	
+		
+			$locationData = $locationDataResult[2];
+			$totalRecordsTobeProcessed = count($locationData);
+			echo $locationUpdateStartMsg = "Total Records to be processed : ". $totalRecordsTobeProcessed."\n\n";
+
+			foreach($locationData as $locationDataVal){
+				$latitude = $locationDataVal['latitude'];
+				$longitude = $locationDataVal['longitude'];
+
+				echo $locationUpdateFor = "Updating location for : ". $latitude."|".$longitude."\n";
+				
+				# Fetch Location Name
+				$validateLatLongResult = $this->helper->validateLatLong($latitude,$longitude);
+
+				# update location
+				$fetchLocationDataVendorResult = $this->locationService->fetchLocationFromVendorByLatLong(Config::PRIMARY_GEO_ENGINE ,$latitude, $longitude, 'cron');
+				$locationName = $fetchLocationDataVendorResult[0];
+				$locationKey = $fetchLocationDataVendorResult[1];
+				$geoEngine = $fetchLocationDataVendorResult[2];
+				echo "Location ".$geoEngine." --".$locationName."\n\n";
+			}
+			//resetting the value if location is not available
+			$fetchLocationDataResultStatus = null;
+			
+			$message = "\nlocation test finished ";
+		}
+		return $message;
+	}	
+	
 }
 
 ?>

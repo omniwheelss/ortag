@@ -134,17 +134,59 @@ class LocationService
 	/**
 		get location name from vendor
 	**/	
-	public function fetchLocationFromVendorByLatLong($latitude,$longitude, $source)
+	public function fetchLocationFromVendorByLatLong($geoEngine, $latitude,$longitude, $source)
 	{
 		$insertResult = $locationServiceResult = null;
 		
-		$geoKey = $this->googleReversGeoApiKey();
-		
-		$url = "https://maps.googleapis.com/maps/api/geocode/xml?latlng=".$latitude.",".$longitude."&sensor=true&key=".$geoKey."";
-		if ($query = $this->loadXML($url)){
-			$location = $query->result->formatted_address;
-		}
+		switch($geoEngine){
+			case 'google':
+				$geoKey = $this->googleReversGeoApiKey();
+				$url = "https://maps.googleapis.com/maps/api/geocode/xml?latlng=".$latitude.",".$longitude."&sensor=true&key=".$geoKey."";
+				if ($query = $this->loadXML($url)){
+					$location = $query->result->formatted_address;
+					# If location not available
+					if(strlen(trim($location))==0){
+						$locationResult = $this->fetchLocationFromVendorByLatLong('bing', $latitude,$longitude, $source);
+						$location = $locationResult[0];
+					}	
+				}
+			break;
+			case 'bing':
+				$geoKey = "AhagBeUCzi0-hsv42yPBftNG9PdZ8iR3ctH8jUZ0k00MBOVR8Svgz9iaru80rnep";
+				$url = "http://dev.virtualearth.net/REST/v1/Locations/".$latitude.",".$longitude."?o=xml&key=".$geoKey."";
+				if ($query =  $this->loadXML($url)){
+					if($query->ResourceSets->ResourceSet->EstimatedTotal == 1){
+						//print_r($query->ResourceSets->ResourceSet->Resources->Location->Address->FormattedAddress);
+						$location = $query->ResourceSets->ResourceSet->Resources->Location->Address->FormattedAddress;
+						# If location not available
+						if(strlen(trim($location))==0){
+							$locationResult = $this->fetchLocationFromVendorByLatLong('google', $latitude,$longitude, $source);
+							$location = $locationResult[0];
+						}	
+					}
+				}			
+			break;
+			case 'mapquest':
+				$geoKey = "mDmGbEEMGlMddRKllJWXomQZ9D0DtmtP";
+				$url = "http://www.mapquestapi.com/geocoding/v1/reverse?key=".$geoKey."&location=".$latitude.",".$longitude."&includeRoadMetadata=true&includeNearestIntersection=true";
+				if ($query = $this->loadJSON($url)){
 
+					if($query->options->maxResults == 1){
+						$queryResult = $query->results;
+						$addressArray = $queryResult[0]->locations[0];
+						//print_r($addressArray);
+						$location = $addressArray->street." ".$addressArray->adminArea5." ".$addressArray->adminArea3;
+						# If location not available
+						if(strlen(trim($location))==0){
+							$locationResult = $this->fetchLocationFromVendorByLatLong('google', $latitude,$longitude, $source);
+							$location = $locationResult[0];
+						}	
+					}
+				}
+			break;	
+			default:
+			break;
+		}
 		$location=trim($location);
 		$location = str_replace(","," ",$location);
 		$location = str_replace("\"","",$location);
@@ -152,14 +194,14 @@ class LocationService
 		$Server_Date_Stamp = date("Y-m-d H:i:s");
 		
 		if(!empty($location)){
-			//$insertResult = $this->insertLocationDetails($latitude,$longitude, $location);
+			$insertResult = $this->insertLocationDetails($latitude,$longitude, $location);
 			
 			# Usage of location service
-			$locationServiceResult = $this->updateLocationServiceHistory('google',$geoKey, $source);
+			$locationServiceResult = $this->updateLocationServiceHistory($geoEngine,$geoKey, $source);
 		}		
 		
 		if (strlen($location)==0){$location="location not available";}
-		return array($location, $this->googleReversGeoApiKey());
+		return array($location, $geoKey, $geoEngine);
 	}
 
 
@@ -221,6 +263,23 @@ class LocationService
 			$logData = "| location service history exception|".$e->getMessage()."".CONFIG::NEWLINE_ERROR."|";
 		}
 		return array($dataStatus, $message);
+	}	
+	
+	
+	/**
+		get JSON data URL
+	**/	
+	function loadJSON($requestURL){
+		
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($ch, CURLOPT_URL, $requestURL);
+		$result = curl_exec($ch);
+		curl_close($ch);
+
+		$obj = json_decode($result);
+		return $obj;
 	}	
 	
 }
