@@ -117,12 +117,12 @@ class DeviceController
 				$validateLatLongResult = $this->helper->validateLatLong($latitude,$longitude);
 				if($validateLatLongResult){
 					# update location
-					$fetchLocationDataVendorResult = $this->locationService->fetchLocationFromVendorByLatLong($latitude, $longitude, 'api');
+					$fetchLocationDataVendorResult = $this->locationService->fetchLocationFromVendorByLatLong(Config::PRIMARY_GEO_ENGINE, $latitude, $longitude, 'api');
 					$locationName = $fetchLocationDataVendorResult[0];
 					$locationKey = $fetchLocationDataVendorResult[1];
 					//echo "Location Google --".$locationName."\n\n";
 					# Data logger
-					$this->helper->dataLoggerFile($locationKey, $logPrefix = 'googleGeo', 'success');						
+					$this->helper->dataLoggerFile($locationKey, $logPrefix = Config::PRIMARY_GEO_ENGINE, 'success');						
 				}	
 			}			
 			

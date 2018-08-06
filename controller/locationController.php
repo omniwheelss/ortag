@@ -67,7 +67,7 @@ class LocationController
 						$geoEngine = $fetchLocationDataVendorResult[2];
 						echo "Location ".$geoEngine." --".$locationName."\n\n";
 						# Data logger
-						$this->helper->dataLoggerFile($locationKey, $logPrefix = 'googleGeo', 'success');						
+						$this->helper->dataLoggerFile($locationKey, $logPrefix = $geoEngine, 'success');						
 					}	
 				}
 				# update location
